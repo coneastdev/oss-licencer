@@ -1,6 +1,6 @@
 #
 # copyright "c" 2025 coneastdev
-# licenced under gpl-3.0, a copy of this licence should be provided with software 
+# licenced under gpl-3.0, a copy of this licence should be provided with the software 
 #
 
 import requests
@@ -105,6 +105,7 @@ def app():
     fetchButton = QPushButton("Find Licence")
     layout.addWidget(fetchButton)
     
+    # Licence display section
     licenceDisplay = QScrollArea()
     licenceDisplay.setWidgetResizable(True)
     licenceContainer = QWidget()
@@ -113,6 +114,7 @@ def app():
     licenceDisplay.setWidget(licenceContainer)
     layout.addWidget(licenceDisplay)
     
+    # Fetch and display licences on button click
     def onFetchClicked():
         searchTerm = searchInput.text().strip()
         if searchTerm:
