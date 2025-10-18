@@ -5,7 +5,6 @@
 
 import requests
 from bs4 import BeautifulSoup
-import json
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLineEdit, QLabel, QScrollArea, QFrame, QFileDialog
 
 licences = []
@@ -16,8 +15,8 @@ def updateLicences():
     try:
         response = requests.get(url)
         response.raise_for_status()
-        licences = response.json()
-        return licences
+        # The API returns a JSON array of licence metadata.
+        return response.json()
     except requests.RequestException as e:
         print(f"Error fetching licenses: {e}")
     
@@ -25,10 +24,14 @@ def updateLicences():
 def searchLicences(searchTerm, licences):
     matchingLicences = []
     for licence in licences:
+        # Assumes licence dict contains 'id' and 'name' keys. If the API changes, guard these accesses.
         if searchTerm.lower() in licence["id"].lower() or searchTerm.lower() in licence["name"].lower():
             matchingLicences.append(licence)
     # Sort the licences by their first keyword, if they have any
-    matchingLicences.sort(key=lambda x: x["keywords"][0] if x["keywords"] else "")
+    matchingLicences.sort(key=lambda x: (
+        0 if any(k.strip().lower() == "popular-strong-community" for k in (x.get("keywords") or [])) else 1,
+        (x.get("name") or "").lower()
+    ))
     return matchingLicences    
 
 # Get the full text of a licence by its ID by scraping the opensource.org website with BeautifulSoup
@@ -41,10 +44,16 @@ def getLicence(licenceID, licences):
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, "html.parser")
                 
+                # Find the container that holds the licence text on the web page.
                 licenceContainer = soup.find("div", class_="license-content")
                 
                 licenceText = ""
                 
+                if not licenceContainer:
+                    # Could not find content container; return None so callers know fetching failed.
+                    return None
+                
+                # Extract paragraphs and apply white space for readability.
                 for p in licenceContainer.find_all("p"):
                     data = p.get_text(separator="\n").strip()
                     
@@ -66,8 +75,10 @@ def getLicence(licenceID, licences):
             except requests.RequestException as e:
                 print(f"Error fetching license details: {e}")
 
+# Launces pyside6 Qt app
 def app(licences):
-    app = QApplication([])
+    # Avoid shadowing the function name `app` with the QApplication instance; local variable name is `qt_app`.
+    qt_app = QApplication([])
     window = QWidget()
     window.setWindowTitle("oss licencer")
     window.resize(400, 500)
@@ -115,6 +126,7 @@ def app(licences):
         if searchTerm:
             results = searchLicences(searchTerm, licences)
             def clear_layout(layout):
+                # Recursively remove widgets from the layout to free them.
                 while layout.count():
                     item = layout.takeAt(0)
                     widget = item.widget()
@@ -148,8 +160,12 @@ def app(licences):
     
     window.setLayout(layout)
     window.show()
-    app.exec()
+    qt_app.exec()
     
 if __name__ == "__main__":
+    # updateLicences() can return None if fetching failed — check before launching the UI.
     licences = updateLicences()
+    if not licences:
+        print("Warning: no licences loaded; UI will start with an empty list.")
+        licences = []
     app(licences)
