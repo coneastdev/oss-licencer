@@ -8,6 +8,8 @@ from bs4 import BeautifulSoup
 import json
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLineEdit, QLabel, QScrollArea, QFrame, QFileDialog
 
+licences = []
+
 # Update the licences.json file from the opensource.org API
 def updateLicences():
     url = "https://opensource.org/api/license/"
@@ -15,63 +17,56 @@ def updateLicences():
         response = requests.get(url)
         response.raise_for_status()
         licences = response.json()
-        with open("licences.json", "w") as f:
-            f.write(str(json.dump(licences, f, indent=4)).replace("None", ""))
-            f.close()
+        return licences
     except requests.RequestException as e:
         print(f"Error fetching licenses: {e}")
     
 # Return licences that match a search term
-def searchLicences(searchTerm):
+def searchLicences(searchTerm, licences):
     matchingLicences = []
-    with open("licences.json", "r") as f:
-        licences = json.load(f)
-        for licence in licences:
-            if searchTerm.lower() in licence["id"].lower() or searchTerm.lower() in licence["name"].lower():
-                matchingLicences.append(licence)
-        # Sort the licences by their first keyword, if they have any
-        matchingLicences.sort(key=lambda x: x["keywords"][0] if x["keywords"] else "")
+    for licence in licences:
+        if searchTerm.lower() in licence["id"].lower() or searchTerm.lower() in licence["name"].lower():
+            matchingLicences.append(licence)
+    # Sort the licences by their first keyword, if they have any
+    matchingLicences.sort(key=lambda x: x["keywords"][0] if x["keywords"] else "")
     return matchingLicences    
 
 # Get the full text of a licence by its ID by scraping the opensource.org website with BeautifulSoup
-def getLicence(licenceID):
-    with open("licences.json", "r") as f:
-        licences = json.load(f)
-        for licence in licences:
-            if licenceID.lower() == licence["id"].lower():
-                url = f"https://opensource.org/license/{licenceID}"
-                try:
-                    response = requests.get(url)
-                    response.raise_for_status()
-                    soup = BeautifulSoup(response.text, "html.parser")
+def getLicence(licenceID, licences):
+    for licence in licences:
+        if licenceID.lower() == licence["id"].lower():
+            url = f"https://opensource.org/license/{licenceID}"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, "html.parser")
+                
+                licenceContainer = soup.find("div", class_="license-content")
+                
+                licenceText = ""
+                
+                for p in licenceContainer.find_all("p"):
+                    data = p.get_text(separator="\n").strip()
                     
-                    licenceContainer = soup.find("div", class_="license-content")
+                    # replace every 10th space (counting across the string) with a newline for better readability
+                    count = 0
+                    parts = []
+                    for ch in data:
+                        if ch == " ":
+                            count += 1
+                            if count % 10 == 0:
+                                parts.append("\n")
+                                continue
+                        parts.append(ch)
+                    data = "".join(parts)
                     
-                    licenceText = ""
-                    
-                    for p in licenceContainer.find_all("p"):
-                        data = p.get_text(separator="\n").strip()
-                        
-                        # replace every 10th space (counting across the string) with a newline for better readability
-                        count = 0
-                        parts = []
-                        for ch in data:
-                            if ch == " ":
-                                count += 1
-                                if count % 10 == 0:
-                                    parts.append("\n")
-                                    continue
-                            parts.append(ch)
-                        data = "".join(parts)
-                        
-                        licenceText += ("\n\n" +  data)
-                    
-                    return licenceText
-                except requests.RequestException as e:
-                    print(f"Error fetching license details: {e}")
-    return None
+                    licenceText += ("\n\n" +  data)
+                
+                return licenceText
+            except requests.RequestException as e:
+                print(f"Error fetching license details: {e}")
 
-def app():
+def app(licences):
     app = QApplication([])
     window = QWidget()
     window.setWindowTitle("oss licencer")
@@ -118,7 +113,7 @@ def app():
     def onFetchClicked():
         searchTerm = searchInput.text().strip()
         if searchTerm:
-            results = searchLicences(searchTerm)
+            results = searchLicences(searchTerm, licences)
             def clear_layout(layout):
                 while layout.count():
                     item = layout.takeAt(0)
@@ -156,4 +151,5 @@ def app():
     app.exec()
     
 if __name__ == "__main__":
-    app()
+    licences = updateLicences()
+    app(licences)
