@@ -75,6 +75,20 @@ def getLicence(licenceID, licences):
             except requests.RequestException as e:
                 print(f"Error fetching license details: {e}")
 
+# Add the licence text to the specified workspace path and notices in files
+def addLicenceToWorkspace(licenceID, workspacePath, licences):
+    licenceText = getLicence(licenceID, licences)
+    if not licenceText:
+        print(f"Could not fetch licence text for ID: {licenceID}")
+        return False
+    try:
+        with open(f"{workspacePath}/LICENCE", "w", encoding="utf-8") as f:
+            f.write(licenceText)
+        return True
+    except IOError as e:
+        print(f"Error writing licence to workspace: {e}")
+        return False
+
 # Launces pyside6 Qt app
 def app(licences):
     # Avoid shadowing the function name `app` with the QApplication instance; local variable name is `qt_app`.
@@ -144,11 +158,12 @@ def app(licences):
                     resultCompLayout = QVBoxLayout(resultComp)
                     resultComp.setLayout(resultCompLayout)
                     
-                    resultName = QLabel(f"Name: {result['name']}")
+                    resultName = QLabel(f"Name: {result["name"]}")
                     resultCompLayout.addWidget(resultName)
-                    resultID = QLabel(f"ID: {result['id']}")
+                    resultID = QLabel(f"ID: {result["id"]}")
                     resultCompLayout.addWidget(resultID)
                     addButton = QPushButton("Add")
+                    addButton.clicked.connect(lambda checked, id=result["id"]: addLicenceToWorkspace(id, pathInput.text().strip(), licences))
                     resultCompLayout.addWidget(addButton)
                     
                     licenceDisplayLayout.addWidget(resultComp)
