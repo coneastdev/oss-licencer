@@ -14,6 +14,6 @@ The app has a very rudimentary GUI. The top text bar and button is for the path 
 
 ## Requirements
 
-For this to you must have git on your system, you also need the following python modules.
+For this to work you must have git on your system, you also need the following python modules.
 
 ```pip install requests beautifulsoup4 PySide6```
