@@ -111,7 +111,7 @@ def insertNoticeInFile(workspacePath, fileName, gitignored, licenceID):
     new_data = None
 
     # languages that use /* */ for comments
-    if extension in ["acedb", "actionscript", "asy", "bind-named", "c", "cg", "ch", "clean", "clipper", "cpp", "cs", "cuda", "d", "dot", "dylan", "fx", "glsl", "go", "groovy", "h", "haxe", "hercules", "hyphy", "idl", "ishd", "java", "javacc", "javascript", "javascript.jquery", "json5", "jsonc", "jsonnet", "kscript", "lpc", "mel", "named", "objc", "objcpp", "objj", "ooc", "pccts", "php", "pike", "pilrc", "plm", "pov", "processing", "proto", "rc", "rust", "scala", "scss", "slice", "stan", "stp", "supercollider", "swift", "systemverilog", "tads", "teak", "tsalt", "typescript", "uc", "vala", "vera", "verilog", "verilog_systemverilog", "sass"]:
+    if extension in ["css", "js", "acedb", "actionscript", "asy", "bind-named", "c", "cg", "ch", "clean", "clipper", "cpp", "cs", "cuda", "d", "dot", "dylan", "fx", "glsl", "go", "groovy", "h", "haxe", "hercules", "hyphy", "idl", "ishd", "java", "javacc", "javascript", "javascript.jquery", "json5", "jsonc", "jsonnet", "kscript", "lpc", "mel", "named", "objc", "objcpp", "objj", "ooc", "pccts", "php", "pike", "pilrc", "plm", "pov", "processing", "proto", "rc", "rust", "scala", "scss", "slice", "stan", "stp", "supercollider", "swift", "systemverilog", "tads", "teak", "tsalt", "typescript", "uc", "vala", "vera", "verilog", "verilog_systemverilog", "sass"]:
         new_data = f"/*\n{copyright}\nThis project is licenced under the {licenceID} licence.\n*/\n\n" + fileData
 
     # languages that use # for comments
