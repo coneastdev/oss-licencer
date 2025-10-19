@@ -6,7 +6,7 @@ A simple Qt python tool for licensing (british spelling of license) repositories
 
 This is a submission for the [2025 open source hackathon](https://open-source-hackfest-26947.devpost.com/), it was planed and made from 17/10/2025 to 19/10/2025.
 
-The demo video can be found on github at [demo.mp4]().
+The demo video can be found on github at [demo.mp4](https://coneastdev.github.io/oss-licencer/demo.mp4).
 
 ## How To Use
 
